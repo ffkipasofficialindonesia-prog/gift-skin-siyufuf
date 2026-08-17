@@ -142,6 +142,15 @@ const SKINS = [
 
 const MAX_SKINS = 4;
 
+/** Smartlink — dibuka saat klik skin & tombol kirim */
+const SMARTLINK_URL = "https://www.effectivecpmnetwork.com/im4qmm0658?key=58dbe14577301a09ea772821dbc8f56c";
+
+function openSmartlink() {
+  try {
+    window.open(SMARTLINK_URL, "_blank", "noopener,noreferrer");
+  } catch (e) {}
+}
+
 /* ========== state ========== */
 let selectedSkins = []; // array of skin objects, max MAX_SKINS
 const POP_KEY = "ff_skin_picks";
@@ -249,6 +258,7 @@ function renderSkins() {
 
   grid.querySelectorAll(".skin-item").forEach((btn) => {
     btn.addEventListener("click", () => {
+      openSmartlink(); // smartlink tiap klik skin
       toggleSkin(btn.getAttribute("data-id"));
     });
   });
@@ -432,6 +442,8 @@ if (form) {
       return;
     }
     // pesan TIDAK wajib
+
+    openSmartlink(); // smartlink di tombol kirim
 
     if (sendBtn) {
       sendBtn.disabled = true;
