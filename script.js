@@ -431,96 +431,12 @@ function absoluteUrl(path) {
   }
 }
 
-/** URL publik untuk Discord (harus http/https) */
+/** Hanya URL publik http(s) yang boleh jadi thumbnail Discord */
 function publicImageUrl(path) {
-  if (!path) return null;
-  const raw = String(path).trim();
-  if (!raw) return null;
-  if (/^https?:\/\//i.test(raw)) return raw;
-  try {
-    const u = new URL(raw, window.location.origin + "/").href;
-    if (/^https?:\/\//i.test(u)) return u;
-  } catch (e) {}
+  const u = absoluteUrl(path);
+  if (!u || typeof u !== "string") return null;
+  if (u.startsWith("https://") || u.startsWith("http://")) return u;
   return null;
-}
-
-function loadImageEl(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("gagal load " + src));
-    img.src = src;
-  });
-}
-
-/**
- * Gabung semua skin jadi 1 gambar collage.
- * 1 skin → 1 kotak | 2 skin → 1x2 | 3–4 skin → 2x2
- * Hasilnya dipakai sebagai thumbnail di KANAN kotak Discord
- * (posisi yang kamu lingkarin).
- */
-async function buildSkinCollageBlob(skins) {
-  const list = (skins || []).slice(0, MAX_SKINS);
-  if (!list.length) return null;
-
-  const cell = 256;
-  const n = list.length;
-  const cols = n === 1 ? 1 : 2;
-  const rows = Math.ceil(n / cols);
-  const canvas = document.createElement("canvas");
-  canvas.width = cell * cols;
-  canvas.height = cell * rows;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  ctx.fillStyle = "#14110c";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < n; i++) {
-    const src = publicImageUrl(list[i].image) || list[i].image;
-    let img;
-    try {
-      img = await loadImageEl(src);
-    } catch (e) {
-      // kotak kosong + nomor
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      ctx.fillStyle = "#1a140e";
-      ctx.fillRect(col * cell, row * cell, cell, cell);
-      ctx.fillStyle = "#ffb100";
-      ctx.font = "bold 48px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(String(i + 1), col * cell + cell / 2, row * cell + cell / 2);
-      continue;
-    }
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x0 = col * cell;
-    const y0 = row * cell;
-    // object-fit: contain
-    const scale = Math.min(cell / img.width, cell / img.height);
-    const w = img.width * scale;
-    const h = img.height * scale;
-    const x = x0 + (cell - w) / 2;
-    const y = y0 + (cell - h) / 2;
-    ctx.drawImage(img, x, y, w, h);
-    // nomor urut kecil
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.beginPath();
-    ctx.arc(x0 + 22, y0 + 22, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffb100";
-    ctx.font = "bold 16px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(i + 1), x0 + 22, y0 + 22);
-  }
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob || null), "image/png", 0.92);
-  });
 }
 
 async function sendToDiscord({ name, contact, message, skins }) {
@@ -528,10 +444,11 @@ async function sendToDiscord({ name, contact, message, skins }) {
     throw new Error("Webhook belum diset. Edit DISCORD_WEBHOOK_URL di script.js");
   }
 
-  const list = Array.isArray(skins) ? skins.slice(0, MAX_SKINS) : [];
+  const list = Array.isArray(skins) ? skins : [];
   const skinNames =
     list.length > 0 ? list.map((s) => s.name).join(", ") : "— (tidak dipilih)";
 
+  // Discord menolak field value kosong → selalu isi fallback
   const fields = [
     { name: "Nama", value: fieldValue(name, "-"), inline: true },
     { name: "ID Free Fire", value: fieldValue(contact, "-"), inline: true },
@@ -539,55 +456,45 @@ async function sendToDiscord({ name, contact, message, skins }) {
     { name: "Skin dipilih", value: fieldValue(skinNames, "-"), inline: false }
   ];
 
+  // Pesan opsional — hanya tambah field jika diisi
   const msg = String(message || "").trim();
   if (msg) {
     fields.push({ name: "Pesan", value: fieldValue(msg, "-"), inline: false });
   }
 
-  // SATU kotak embed saja — gambar di KANAN (thumbnail), bukan embed baru ke bawah
+    // Embed utama (data order)
   const mainEmbed = {
-    title: "Bocil Skin FF",
+    title: "NOTIF SKIN FREE FIRE",
     color: 16744448,
     fields,
     timestamp: new Date().toISOString(),
-    footer: { text: "FF Skin Bocil · max " + MAX_SKINS + " skin" }
+    footer: { text: "MUHLIS KIPAS · MAX " + MAX_SKINS + " SKIN" }
   };
 
-  // Collage semua skin → thumbnail di kanan kotak (posisi yang dilingkari)
-  let collageBlob = null;
-  try {
-    collageBlob = await buildSkinCollageBlob(list);
-  } catch (e) {
-    console.warn("collage fail", e);
-  }
+  // 1 embed per skin → semua gambar muncul
+  const skinEmbeds = list.slice(0, MAX_SKINS).map((s, i) => {
+    const emb = {
+      title: (i + 1) + ". " + (s.name || "Skin"),
+      color: 16744448,
+      description: s.name || "-"
+    };
+    const img = publicImageUrl(s.image);
+    if (img) emb.image = { url: img };
+    return emb;
+  });
 
-  if (collageBlob) {
-    // attachment:// → Discord pakai file yang di-upload di request yang sama
-    mainEmbed.thumbnail = { url: "attachment://skins-collage.png" };
-  } else {
-    // fallback: skin pertama saja
-    const first = list[0] ? publicImageUrl(list[0].image) : null;
-    if (first) mainEmbed.thumbnail = { url: first };
-  }
+  const embeds = [mainEmbed].concat(skinEmbeds).slice(0, 10);
 
   const payload = {
     username: "MUHLIS KIPAS",
-    embeds: [mainEmbed]
+    embeds
   };
 
-  let res;
-  if (collageBlob) {
-    const fd = new FormData();
-    fd.append("payload_json", JSON.stringify(payload));
-    fd.append("files[0]", collageBlob, "skins-collage.png");
-    res = await fetch(DISCORD_WEBHOOK_URL, { method: "POST", body: fd });
-  } else {
-    res = await fetch(DISCORD_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-  }
+  const res = await fetch(DISCORD_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
