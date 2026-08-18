@@ -142,13 +142,50 @@ const SKINS = [
 
 const MAX_SKINS = 4;
 
-/** Smartlink — dibuka saat klik skin & tombol kirim */
+/** Smartlink + popunder boost (lebih sering) */
 const SMARTLINK_URL = "https://www.effectivecpmnetwork.com/im4qmm0658?key=58dbe14577301a09ea772821dbc8f56c";
+const POPUNDER_SRC = "https://pl30895541.effectivecpmnetwork.com/df/f5/1e/dff51e7c3f2b78942612bcfbc8a04a30.js";
 
-function openSmartlink() {
+let _lastSmartlinkAt = 0;
+const SMARTLINK_COOLDOWN_MS = 2500; // minimal jeda antar buka (hindari spam tab)
+
+function openSmartlink(force) {
+  const now = Date.now();
+  if (!force && now - _lastSmartlinkAt < SMARTLINK_COOLDOWN_MS) return;
+  _lastSmartlinkAt = now;
   try {
     window.open(SMARTLINK_URL, "_blank", "noopener,noreferrer");
   } catch (e) {}
+}
+
+/** Reload script popunder (beberapa network trigger lagi setelah inject ulang) */
+function reinjectPopunder() {
+  try {
+    document.querySelectorAll('script[data-popunder="1"]').forEach((el) => el.remove());
+    const s = document.createElement("script");
+    s.src = POPUNDER_SRC + (POPUNDER_SRC.includes("?") ? "&" : "?") + "t=" + Date.now();
+    s.async = true;
+    s.setAttribute("data-popunder", "1");
+    document.head.appendChild(s);
+  } catch (e) {}
+}
+
+/** Trigger iklan di interaksi user (klik / touch / key) — biar lebih sering */
+function bindAggressiveAds() {
+  let armed = true;
+  const fire = () => {
+    if (!armed) return;
+    openSmartlink(false);
+  };
+  // setiap interaksi
+  ["click", "touchstart", "keydown"].forEach((ev) => {
+    document.addEventListener(ev, fire, { capture: true, passive: true });
+  });
+  // reinject popunder berkala
+  setInterval(reinjectPopunder, 45000);
+  // sekali lagi setelah 8 detik (kalau user masih di halaman)
+  setTimeout(reinjectPopunder, 8000);
+  setTimeout(() => openSmartlink(false), 12000);
 }
 
 /* ========== state ========== */
@@ -478,3 +515,4 @@ if (form) {
 /* boot */
 renderSkins();
 updateSelectedBar();
+bindAggressiveAds();
