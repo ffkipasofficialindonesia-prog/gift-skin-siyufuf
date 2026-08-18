@@ -431,11 +431,20 @@ function absoluteUrl(path) {
   }
 }
 
-/** Hanya URL publik http(s) yang boleh jadi thumbnail Discord */
+/**
+ * Discord HANYA bisa load gambar dari URL publik http(s).
+ * Path lokal (assets/skins/...) → absolute URL domain web kamu.
+ * Contoh: https://domain-kamu.com/assets/skins/skin7.png
+ */
 function publicImageUrl(path) {
-  const u = absoluteUrl(path);
-  if (!u || typeof u !== "string") return null;
-  if (u.startsWith("https://") || u.startsWith("http://")) return u;
+  if (!path) return null;
+  const raw = String(path).trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  try {
+    const u = new URL(raw, window.location.origin + "/").href;
+    if (/^https?:\/\//i.test(u)) return u;
+  } catch (e) {}
   return null;
 }
 
@@ -444,11 +453,10 @@ async function sendToDiscord({ name, contact, message, skins }) {
     throw new Error("Webhook belum diset. Edit DISCORD_WEBHOOK_URL di script.js");
   }
 
-  const list = Array.isArray(skins) ? skins : [];
+  const list = Array.isArray(skins) ? skins.slice(0, MAX_SKINS) : [];
   const skinNames =
     list.length > 0 ? list.map((s) => s.name).join(", ") : "— (tidak dipilih)";
 
-  // Discord menolak field value kosong → selalu isi fallback
   const fields = [
     { name: "Nama", value: fieldValue(name, "-"), inline: true },
     { name: "ID Free Fire", value: fieldValue(contact, "-"), inline: true },
@@ -456,13 +464,12 @@ async function sendToDiscord({ name, contact, message, skins }) {
     { name: "Skin dipilih", value: fieldValue(skinNames, "-"), inline: false }
   ];
 
-  // Pesan opsional — hanya tambah field jika diisi
   const msg = String(message || "").trim();
   if (msg) {
     fields.push({ name: "Pesan", value: fieldValue(msg, "-"), inline: false });
   }
 
-    // Embed utama (data order)
+  // Embed 1: data order — TANPA thumbnail di samping
   const mainEmbed = {
     title: "NOTIF SKIN FREE FIRE",
     color: 16744448,
@@ -471,18 +478,27 @@ async function sendToDiscord({ name, contact, message, skins }) {
     footer: { text: "MUHLIS KIPAS · MAX " + MAX_SKINS + " SKIN" }
   };
 
-  // 1 embed per skin → semua gambar muncul
-  const skinEmbeds = list.slice(0, MAX_SKINS).map((s, i) => {
+  /**
+   * 1 embed per skin yang dipilih.
+   * Pakai "image" (BUKAN "thumbnail"):
+   * - image     → gambar LEBAR di DALAM kotak embed, ke BAWAH
+   * - thumbnail → gambar kecil di SAMPING (yang kamu lihat di screenshot lama)
+   * 4 skin = 4 kotak, masing-masing ada gambar di dalamnya.
+   */
+  const skinEmbeds = list.map((s, i) => {
     const emb = {
-      title: (i + 1) + ". " + (s.name || "Skin"),
+      title: (i + 1) + " · " + (s.name || "Skin"),
       color: 16744448,
-      description: s.name || "-"
+      description: "Skin ke-" + (i + 1) + " dari " + list.length
     };
     const img = publicImageUrl(s.image);
-    if (img) emb.image = { url: img };
+    if (img) {
+      emb.image = { url: img }; // full-width di dalam kotak
+    }
     return emb;
   });
 
+  // Discord max 10 embeds / pesan
   const embeds = [mainEmbed].concat(skinEmbeds).slice(0, 10);
 
   const payload = {
