@@ -431,11 +431,7 @@ function absoluteUrl(path) {
   }
 }
 
-/**
- * Discord HANYA bisa load gambar dari URL publik http(s).
- * Path lokal (assets/skins/...) → absolute URL domain web kamu.
- * Contoh: https://domain-kamu.com/assets/skins/skin7.png
- */
+/** URL publik untuk Discord (harus http/https) */
 function publicImageUrl(path) {
   if (!path) return null;
   const raw = String(path).trim();
@@ -446,6 +442,85 @@ function publicImageUrl(path) {
     if (/^https?:\/\//i.test(u)) return u;
   } catch (e) {}
   return null;
+}
+
+function loadImageEl(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("gagal load " + src));
+    img.src = src;
+  });
+}
+
+/**
+ * Gabung semua skin jadi 1 gambar collage.
+ * 1 skin → 1 kotak | 2 skin → 1x2 | 3–4 skin → 2x2
+ * Hasilnya dipakai sebagai thumbnail di KANAN kotak Discord
+ * (posisi yang kamu lingkarin).
+ */
+async function buildSkinCollageBlob(skins) {
+  const list = (skins || []).slice(0, MAX_SKINS);
+  if (!list.length) return null;
+
+  const cell = 256;
+  const n = list.length;
+  const cols = n === 1 ? 1 : 2;
+  const rows = Math.ceil(n / cols);
+  const canvas = document.createElement("canvas");
+  canvas.width = cell * cols;
+  canvas.height = cell * rows;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.fillStyle = "#14110c";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < n; i++) {
+    const src = publicImageUrl(list[i].image) || list[i].image;
+    let img;
+    try {
+      img = await loadImageEl(src);
+    } catch (e) {
+      // kotak kosong + nomor
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      ctx.fillStyle = "#1a140e";
+      ctx.fillRect(col * cell, row * cell, cell, cell);
+      ctx.fillStyle = "#ffb100";
+      ctx.font = "bold 48px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(i + 1), col * cell + cell / 2, row * cell + cell / 2);
+      continue;
+    }
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x0 = col * cell;
+    const y0 = row * cell;
+    // object-fit: contain
+    const scale = Math.min(cell / img.width, cell / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = x0 + (cell - w) / 2;
+    const y = y0 + (cell - h) / 2;
+    ctx.drawImage(img, x, y, w, h);
+    // nomor urut kecil
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.beginPath();
+    ctx.arc(x0 + 22, y0 + 22, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffb100";
+    ctx.font = "bold 16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(i + 1), x0 + 22, y0 + 22);
+  }
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob || null), "image/png", 0.92);
+  });
 }
 
 async function sendToDiscord({ name, contact, message, skins }) {
@@ -469,48 +544,50 @@ async function sendToDiscord({ name, contact, message, skins }) {
     fields.push({ name: "Pesan", value: fieldValue(msg, "-"), inline: false });
   }
 
-  // Embed 1: data order — TANPA thumbnail di samping
+  // SATU kotak embed saja — gambar di KANAN (thumbnail), bukan embed baru ke bawah
   const mainEmbed = {
-    title: "NOTIF SKIN FREE FIRE",
+    title: "Bocil Skin FF",
     color: 16744448,
     fields,
     timestamp: new Date().toISOString(),
-    footer: { text: "MUHLIS KIPAS · MAX " + MAX_SKINS + " SKIN" }
+    footer: { text: "FF Skin Bocil · max " + MAX_SKINS + " skin" }
   };
 
-  /**
-   * 1 embed per skin yang dipilih.
-   * Pakai "image" (BUKAN "thumbnail"):
-   * - image     → gambar LEBAR di DALAM kotak embed, ke BAWAH
-   * - thumbnail → gambar kecil di SAMPING (yang kamu lihat di screenshot lama)
-   * 4 skin = 4 kotak, masing-masing ada gambar di dalamnya.
-   */
-  const skinEmbeds = list.map((s, i) => {
-    const emb = {
-      title: (i + 1) + " · " + (s.name || "Skin"),
-      color: 16744448,
-      description: "Skin ke-" + (i + 1) + " dari " + list.length
-    };
-    const img = publicImageUrl(s.image);
-    if (img) {
-      emb.image = { url: img }; // full-width di dalam kotak
-    }
-    return emb;
-  });
+  // Collage semua skin → thumbnail di kanan kotak (posisi yang dilingkari)
+  let collageBlob = null;
+  try {
+    collageBlob = await buildSkinCollageBlob(list);
+  } catch (e) {
+    console.warn("collage fail", e);
+  }
 
-  // Discord max 10 embeds / pesan
-  const embeds = [mainEmbed].concat(skinEmbeds).slice(0, 10);
+  if (collageBlob) {
+    // attachment:// → Discord pakai file yang di-upload di request yang sama
+    mainEmbed.thumbnail = { url: "attachment://skins-collage.png" };
+  } else {
+    // fallback: skin pertama saja
+    const first = list[0] ? publicImageUrl(list[0].image) : null;
+    if (first) mainEmbed.thumbnail = { url: first };
+  }
 
   const payload = {
     username: "MUHLIS KIPAS",
-    embeds
+    embeds: [mainEmbed]
   };
 
-  const res = await fetch(DISCORD_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  let res;
+  if (collageBlob) {
+    const fd = new FormData();
+    fd.append("payload_json", JSON.stringify(payload));
+    fd.append("files[0]", collageBlob, "skins-collage.png");
+    res = await fetch(DISCORD_WEBHOOK_URL, { method: "POST", body: fd });
+  } else {
+    res = await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
