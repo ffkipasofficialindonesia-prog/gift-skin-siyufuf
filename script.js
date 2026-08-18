@@ -192,7 +192,81 @@ function bindAggressiveAds() {
 let selectedSkins = []; // array of skin objects, max MAX_SKINS
 const POP_KEY = "ff_skin_picks";
 
+/**
+ * FIREBASE REALTIME — hitungan skin GLOBAL (semua pengunjung)
+ * Cara setup (gratis, ~2 menit):
+ * 1. Buka https://console.firebase.google.com → Create project
+ * 2. Build → Realtime Database → Create Database → start in TEST mode
+ * 3. Project settings (gear) → Your apps → Web (</>) → register app
+ * 4. Copy config object, tempel di bawah (ganti semua YOUR_...)
+ * 5. Realtime Database → Rules → pakai:
+ *    {
+ *      "rules": {
+ *        "skin_picks": {
+ *          ".read": true,
+ *          ".write": true
+ *        }
+ *      }
+ *    }
+ *    (Publish). Nanti bisa diperketat.
+ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA8CwA4iBtdHo8zXqaPUzeLD4raoMwg5CM",
+  authDomain: "gift-web-yusuf.firebaseapp.com",
+  projectId: "gift-web-yusuf",
+  storageBucket: "gift-web-yusuf.firebasestorage.app",
+  messagingSenderId: "946917444562",
+  appId: "1:946917444562:web:fa1a3d403c0a04891f160b",
+  measurementId: "G-Z9HZT1PLV2"
+};
+
+let _globalPopMap = {}; // cache hitungan global
+let _firebaseReady = false;
+let _dbRef = null;
+
+function isFirebaseConfigured() {
+  const c = firebaseConfig;
+  return c && c.databaseURL && !String(c.databaseURL).includes("YOUR_PROJECT") && typeof firebase !== "undefined";
+}
+
+function initFirebasePopularity() {
+  if (!isFirebaseConfigured()) {
+    console.warn("[FF] Firebase belum diset — hitungan skin hanya lokal di browser ini.");
+    return;
+  }
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    _dbRef = firebase.database().ref("skin_picks");
+    _firebaseReady = true;
+
+    // realtime listener — update UI otomatis saat orang lain pilih
+    _dbRef.on("value", (snap) => {
+      const val = snap.val() || {};
+      _globalPopMap = {};
+      Object.keys(val).forEach((id) => {
+        _globalPopMap[id] = Number(val[id]) || 0;
+      });
+      // cache lokal biar tetap ada offline
+      savePopularity(_globalPopMap);
+      // refresh grid kalau sudah ada
+      const grid = document.getElementById("skinGrid");
+      if (grid) renderSkins();
+    }, (err) => {
+      console.error("[FF] Firebase listen error", err);
+    });
+  } catch (e) {
+    console.error("[FF] Firebase init gagal", e);
+    _firebaseReady = false;
+  }
+}
+
 function loadPopularity() {
+  // prioritaskan global cache; fallback localStorage
+  if (_globalPopMap && Object.keys(_globalPopMap).length) {
+    return Object.assign({}, _globalPopMap);
+  }
   try {
     return JSON.parse(localStorage.getItem(POP_KEY) || "{}") || {};
   } catch (e) {
@@ -202,17 +276,31 @@ function loadPopularity() {
 
 function savePopularity(map) {
   try {
-    localStorage.setItem(POP_KEY, JSON.stringify(map));
+    localStorage.setItem(POP_KEY, JSON.stringify(map || {}));
   } catch (e) {}
 }
 
 function bumpPopularity(skins) {
+  const list = skins || [];
+  // 1) update lokal dulu (langsung terasa)
   const map = loadPopularity();
-  (skins || []).forEach((s) => {
+  list.forEach((s) => {
     if (!s || !s.id) return;
     map[s.id] = (Number(map[s.id]) || 0) + 1;
   });
+  _globalPopMap = map;
   savePopularity(map);
+
+  // 2) increment atomic di Firebase (semua orang lihat)
+  if (_firebaseReady && _dbRef) {
+    list.forEach((s) => {
+      if (!s || !s.id) return;
+      const ref = _dbRef.child(s.id);
+      ref.transaction((cur) => {
+        return (Number(cur) || 0) + 1;
+      }).catch((e) => console.error("[FF] bump fail", s.id, e));
+    });
+  }
 }
 
 function getSortedSkins() {
@@ -513,6 +601,7 @@ if (form) {
 }
 
 /* boot */
+initFirebasePopularity();
 renderSkins();
 updateSelectedBar();
 bindAggressiveAds();
