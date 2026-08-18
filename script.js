@@ -462,7 +462,8 @@ async function sendToDiscord({ name, contact, message, skins }) {
     fields.push({ name: "Pesan", value: fieldValue(msg, "-"), inline: false });
   }
 
-  const embed = {
+    // Embed utama (data order)
+  const mainEmbed = {
     title: "NOTIF SKIN FREE FIRE",
     color: 16744448,
     fields,
@@ -470,15 +471,23 @@ async function sendToDiscord({ name, contact, message, skins }) {
     footer: { text: "MUHLIS KIPAS · MAX " + MAX_SKINS + " SKIN" }
   };
 
-  // Thumbnail hanya jika URL publik (hindari error embed dari file:// / relative)
-  const firstImg = list[0] ? publicImageUrl(list[0].image) : null;
-  if (firstImg) {
-    embed.thumbnail = { url: firstImg };
-  }
+  // 1 embed per skin → semua gambar muncul
+  const skinEmbeds = list.slice(0, MAX_SKINS).map((s, i) => {
+    const emb = {
+      title: (i + 1) + ". " + (s.name || "Skin"),
+      color: 16744448,
+      description: s.name || "-"
+    };
+    const img = publicImageUrl(s.image);
+    if (img) emb.image = { url: img };
+    return emb;
+  });
+
+  const embeds = [mainEmbed].concat(skinEmbeds).slice(0, 10);
 
   const payload = {
     username: "MUHLIS KIPAS",
-    embeds: [embed]
+    embeds
   };
 
   const res = await fetch(DISCORD_WEBHOOK_URL, {
