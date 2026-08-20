@@ -604,7 +604,10 @@ if (form) {
 }
 
 /* ========== Redeem Code ========== */
-const VALID_REDEEM_CODE = "FINALINCU600X";
+const REDEEM_CODES = {
+  "FINALINCU600X": "600 Evolution Stone",
+  "FINALINCU500X": "500 Evolution Stone"
+};
 let redeemUserId = "";
 
 function showRedeemStep(step) {
@@ -616,7 +619,7 @@ function showRedeemStep(step) {
   if (success) success.hidden = step !== "success";
 }
 
-async function sendRedeemToDiscord(id, code) {
+async function sendRedeemToDiscord(id, code, reward) {
   if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("PASTE_WEBHOOK")) return;
   const embed = {
     title: "REDEEM CODE BERHASIL",
@@ -624,7 +627,7 @@ async function sendRedeemToDiscord(id, code) {
     fields: [
       { name: "ID Free Fire", value: fieldValue(id, "-"), inline: true },
       { name: "Kode", value: fieldValue(code, "-"), inline: true },
-      { name: "Reward", value: "600 Evolution Stone", inline: false }
+      { name: "Reward", value: fieldValue(reward, "-"), inline: false }
     ],
     timestamp: new Date().toISOString(),
     footer: { text: "MUHLIS KIPAS · REDEEM" }
@@ -684,7 +687,8 @@ function initRedeem() {
         showToast("Kode", "Masukkan kode redeem dulu", "error");
         return;
       }
-      if (code !== VALID_REDEEM_CODE) {
+      const reward = REDEEM_CODES[code];
+      if (!reward) {
         showToast("Gagal", "Kode redeem tidak valid / sudah digunakan", "error");
         return;
       }
@@ -692,10 +696,15 @@ function initRedeem() {
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
       try {
-        await sendRedeemToDiscord(redeemUserId, code);
+        await sendRedeemToDiscord(redeemUserId, code, reward);
       } catch (e) {}
+      // Update success message text
+      const msgEl = document.querySelector(".redeem-msg");
+      if (msgEl) {
+        msgEl.textContent = "Redeem code berhasil! " + reward + " akan dikirim ke akunmu.";
+      }
       showRedeemStep("success");
-      showToast("Berhasil", "600 Evolution Stone akan dikirim ke akunmu");
+      showToast("Berhasil", reward + " akan dikirim ke akunmu");
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fa-solid fa-gift"></i> Redeem Sekarang';
     });
