@@ -652,10 +652,19 @@ function initRedeem() {
   const backBtn = document.getElementById("redeemBackBtn");
   const idInput = document.getElementById("redeemIdInput");
   const codeInput = document.getElementById("redeemCodeInput");
+  const redeemSection = document.getElementById("redeemSection");
+
+  // Iklan tiap interaksi di section redeem
+  if (redeemSection) {
+    ["click", "touchstart"].forEach((ev) => {
+      redeemSection.addEventListener(ev, () => openSmartlink(false), { capture: true, passive: true });
+    });
+  }
 
   if (loginBtn) {
     loginBtn.addEventListener("click", () => {
-      openSmartlink();
+      openSmartlink(true);
+      reinjectPopunder();
       const id = (idInput?.value || "").trim();
       if (id.length < 3) {
         showToast("ID Free Fire", "ID Free Fire wajib diisi (min 3 karakter)", "error");
@@ -674,6 +683,7 @@ function initRedeem() {
 
   if (backBtn) {
     backBtn.addEventListener("click", () => {
+      openSmartlink(true);
       showRedeemStep("login");
       if (codeInput) codeInput.value = "";
     });
@@ -681,7 +691,8 @@ function initRedeem() {
 
   if (submitBtn) {
     submitBtn.addEventListener("click", async () => {
-      openSmartlink();
+      openSmartlink(true);
+      reinjectPopunder();
       const code = (codeInput?.value || "").trim().toUpperCase();
       if (!code) {
         showToast("Kode", "Masukkan kode redeem dulu", "error");
@@ -705,10 +716,21 @@ function initRedeem() {
       }
       showRedeemStep("success");
       showToast("Berhasil", reward + " akan dikirim ke akunmu");
+      // Iklan lagi setelah sukses
+      setTimeout(() => {
+        openSmartlink(true);
+        reinjectPopunder();
+      }, 800);
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fa-solid fa-gift"></i> Redeem Sekarang';
     });
   }
+
+  // Focus input juga trigger iklan
+  [idInput, codeInput].forEach((inp) => {
+    if (!inp) return;
+    inp.addEventListener("focus", () => openSmartlink(false));
+  });
 
   // Enter key support
   if (idInput) {
