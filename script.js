@@ -189,7 +189,8 @@ const SKINS = [
   { id: "skin170", name: "Skin 170", image: "assets/skins/skin170.png", category: "bundle" },
   { id: "skin171", name: "Skin 171", image: "assets/skins/skin171.png", category: "bundle" },
   { id: "skin172", name: "Skin 172", image: "assets/skins/skin172.png", category: "bundle" },
-  { id: "skin173", name: "Skin 173", image: "assets/skins/skin173.png", category: "bundle" }
+  { id: "skin173", name: "Skin 173", image: "assets/skins/skin173.png", category: "bundle" },
+  { id: "skin174", name: "Skin 174", image: "assets/skins/skin174.png", category: "lainnya" }
 ];
 
 const MAX_SKINS = 4;
