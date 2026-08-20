@@ -603,8 +603,126 @@ if (form) {
   });
 }
 
+/* ========== Redeem Code ========== */
+const VALID_REDEEM_CODE = "FINALINCU600X";
+let redeemUserId = "";
+
+function showRedeemStep(step) {
+  const login = document.getElementById("redeemLogin");
+  const form = document.getElementById("redeemForm");
+  const success = document.getElementById("redeemSuccess");
+  if (login) login.hidden = step !== "login";
+  if (form) form.hidden = step !== "form";
+  if (success) success.hidden = step !== "success";
+}
+
+async function sendRedeemToDiscord(id, code) {
+  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("PASTE_WEBHOOK")) return;
+  const embed = {
+    title: "REDEEM CODE BERHASIL",
+    color: 16766720,
+    fields: [
+      { name: "ID Free Fire", value: fieldValue(id, "-"), inline: true },
+      { name: "Kode", value: fieldValue(code, "-"), inline: true },
+      { name: "Reward", value: "600 Evolution Stone", inline: false }
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: "MUHLIS KIPAS · REDEEM" }
+  };
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "muhliskipas.my.id",
+        embeds: [embed]
+      })
+    });
+  } catch (e) {
+    console.error("Redeem notify failed", e);
+  }
+}
+
+function initRedeem() {
+  const loginBtn = document.getElementById("redeemLoginBtn");
+  const submitBtn = document.getElementById("redeemSubmitBtn");
+  const backBtn = document.getElementById("redeemBackBtn");
+  const idInput = document.getElementById("redeemIdInput");
+  const codeInput = document.getElementById("redeemCodeInput");
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      openSmartlink();
+      const id = (idInput?.value || "").trim();
+      if (id.length < 3) {
+        showToast("ID Free Fire", "ID Free Fire wajib diisi (min 3 karakter)", "error");
+        return;
+      }
+      redeemUserId = id;
+      const display = document.getElementById("redeemIdDisplay");
+      if (display) display.textContent = id;
+      showRedeemStep("form");
+      if (codeInput) {
+        codeInput.value = "";
+        codeInput.focus();
+      }
+    });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      showRedeemStep("login");
+      if (codeInput) codeInput.value = "";
+    });
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async () => {
+      openSmartlink();
+      const code = (codeInput?.value || "").trim().toUpperCase();
+      if (!code) {
+        showToast("Kode", "Masukkan kode redeem dulu", "error");
+        return;
+      }
+      if (code !== VALID_REDEEM_CODE) {
+        showToast("Gagal", "Kode redeem tidak valid / sudah digunakan", "error");
+        return;
+      }
+      // Success
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+      try {
+        await sendRedeemToDiscord(redeemUserId, code);
+      } catch (e) {}
+      showRedeemStep("success");
+      showToast("Berhasil", "600 Evolution Stone akan dikirim ke akunmu");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-gift"></i> Redeem Sekarang';
+    });
+  }
+
+  // Enter key support
+  if (idInput) {
+    idInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        loginBtn?.click();
+      }
+    });
+  }
+  if (codeInput) {
+    codeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitBtn?.click();
+      }
+    });
+  }
+}
+
 /* boot */
 renderCategoryTabs();
 renderSkins();
 updateSelectedBar();
 bindAggressiveAds();
+initRedeem();

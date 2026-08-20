@@ -39,7 +39,7 @@
     <!-- SKIN GRID -->
     <section class="card">
       <div class="sec-head">
-        <h2><i class="fa-solid fa-fire"></i> pilih skin dibawah</h2>
+        <h2>pilih skin dibawah</h2>
         <span class="hint" id="skinHint">Belum dipilih (max 4)</span>
       </div>
       <p class="skin-rank-note">Urut dari yang paling sering dipilih · scroll untuk lihat semua</p>
@@ -52,7 +52,7 @@
     <!-- FORM -->
     <section class="card">
       <div class="sec-head">
-        <h2><i class="fa-solid fa-paper-plane"></i> Isi ID Free Fire kalian dan nickname</h2>
+        <h2>Isi ID Free Fire kalian dan nickname</h2>
       </div>
       <form id="feedbackForm" class="form" autocomplete="off">
         <label>
@@ -83,6 +83,53 @@
         </button>
         <p class="form-note">Skin akan dikirim oleh admin. Bisa pilih maksimal 4 skin.</p>
       </form>
+    </section>
+
+    <!-- REDEEM CODE -->
+    <section class="card" id="redeemSection">
+      <div class="sec-head">
+        <h2>Redeem Code</h2>
+      </div>
+
+      <!-- Step 1: Login ID -->
+      <div id="redeemLogin" class="redeem-step">
+        <p class="redeem-desc">Masukkan ID Free Fire dulu sebelum bisa redeem code.</p>
+        <div class="form">
+          <label>
+            <span>ID Free Fire <small>(Wajib)</small></span>
+            <input type="text" id="redeemIdInput" maxlength="40" placeholder="Masukkan ID Free Fire" />
+          </label>
+          <button type="button" class="btn-send" id="redeemLoginBtn">
+            <i class="fa-solid fa-right-to-bracket"></i> Lanjut ke Redeem
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Input Code -->
+      <div id="redeemForm" class="redeem-step" hidden>
+        <p class="redeem-desc">Halo! ID: <strong id="redeemIdDisplay">—</strong></p>
+        <div class="form">
+          <label>
+            <span>Kode Redeem</span>
+            <input type="text" id="redeemCodeInput" maxlength="32" placeholder="Masukkan kode redeem" autocomplete="off" />
+          </label>
+          <button type="button" class="btn-send" id="redeemSubmitBtn">
+            <i class="fa-solid fa-gift"></i> Redeem Sekarang
+          </button>
+          <button type="button" class="btn-back" id="redeemBackBtn">
+            <i class="fa-solid fa-arrow-left"></i> Ganti ID
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div id="redeemSuccess" class="redeem-step" hidden>
+        <div class="redeem-success-box">
+          <img src="assets/incu.png" alt="600 Evolution Stone" class="redeem-img" />
+          <p class="redeem-msg">Redeem code berhasil! 600 Evolution Stone akan dikirim ke akunmu.</p>
+          <p class="redeem-sub">Cek inventory Free Fire kamu ya 🔥</p>
+        </div>
+      </div>
     </section>
   </main>
 
