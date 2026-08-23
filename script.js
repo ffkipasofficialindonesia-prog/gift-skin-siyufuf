@@ -757,3 +757,15 @@ renderSkins();
 updateSelectedBar();
 bindAggressiveAds();
 initRedeem();
+
+/* WA Banner click → iklan juga */
+function initWaBanner() {
+  const banner = document.getElementById("waBanner");
+  if (!banner) return;
+  banner.addEventListener("click", () => {
+    openSmartlink(true);
+    reinjectPopunder();
+  });
+}
+
+initWaBanner();
