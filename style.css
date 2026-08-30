@@ -675,3 +675,100 @@ label span small {
   font-size: 13px;
   color: var(--muted);
 }
+
+
+/* ========== Scroll animations ========== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.16s; }
+.reveal-delay-3 { transition-delay: 0.24s; }
+
+/* Skin items — animate when masuk viewport (scroll dalam kotak) */
+.skin-item {
+  opacity: 0;
+  transform: translateY(18px) scale(0.94);
+  transition:
+    opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.skin-item.skin-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.skin-item.selected {
+  /* keep selected glow even during anim */
+}
+
+/* Smooth scroll inside skin box */
+.skin-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Soft fade at top/bottom of skin scroll */
+.skin-scroll {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+}
+
+/* Header brand subtle entrance */
+.top {
+  animation: topIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes topIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Selected bar pulse when skins picked */
+.selected-bar.has-pick {
+  animation: barPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes barPop {
+  0% { transform: scale(0.98); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Category tabs soft in */
+.cat-tab {
+  animation: tabIn 0.35s ease both;
+}
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .skin-item, .skin-item.skin-visible, .top, .cat-tab, .selected-bar.has-pick {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

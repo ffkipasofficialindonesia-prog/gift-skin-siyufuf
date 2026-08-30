@@ -384,10 +384,56 @@ function renderSkins() {
       </button>`;
   }).join("");
 
-  grid.querySelectorAll(".skin-item").forEach((btn) => {
+  const items = grid.querySelectorAll(".skin-item");
+  items.forEach((btn) => {
     btn.addEventListener("click", () => {
       openSmartlink(); // smartlink tiap klik skin
       toggleSkin(btn.getAttribute("data-id"));
+    });
+  });
+  observeSkinItems(items);
+}
+
+/** Animasi skin saat masuk area scroll */
+let _skinIO = null;
+function observeSkinItems(items) {
+  const root = document.getElementById("skinScroll");
+  if (!items || !items.length) return;
+  if (_skinIO) {
+    try { _skinIO.disconnect(); } catch (e) {}
+  }
+  // reduced motion → show all
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    items.forEach((el) => el.classList.add("skin-visible"));
+    return;
+  }
+  _skinIO = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          const el = e.target;
+          const delay = Number(el.dataset.animDelay || 0);
+          setTimeout(() => el.classList.add("skin-visible"), delay);
+          _skinIO.unobserve(el);
+        }
+      });
+    },
+    { root: root || null, threshold: 0.15, rootMargin: "8px 0px 8px 0px" }
+  );
+  items.forEach((el, i) => {
+    el.classList.remove("skin-visible");
+    el.dataset.animDelay = String(Math.min(i % 6, 5) * 40); // stagger per baris
+    _skinIO.observe(el);
+  });
+  // fallback: kalau sudah di viewport tanpa scroll event, paksa cek
+  requestAnimationFrame(() => {
+    items.forEach((el) => {
+      if (!root) return;
+      const rr = root.getBoundingClientRect();
+      const er = el.getBoundingClientRect();
+      if (er.top < rr.bottom && er.bottom > rr.top) {
+        // biar observer yang handle
+      }
     });
   });
 }
@@ -401,6 +447,11 @@ function placeholderSvg(name) {
 }
 
 function updateSelectedBar() {
+  const bar = document.getElementById("selectedBar");
+  if (bar) {
+    bar.classList.toggle("has-pick", selectedSkins.length > 0);
+  }
+
   const hint = document.getElementById("skinHint");
   const nameEl = document.getElementById("selectedName");
   const subEl = document.getElementById("selectedSub");
@@ -751,9 +802,31 @@ function initRedeem() {
   }
 }
 
+/* ========== scroll reveal ========== */
+function initScrollReveal() {
+  document.querySelectorAll("main .card").forEach((el, i) => {
+    el.classList.add("reveal");
+    if (i > 0) el.classList.add("reveal-delay-" + Math.min(i, 3));
+  });
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("show");
+          // keep shown — optional unobserve
+          io.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: "0px 0px -24px 0px" }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+}
+
 /* boot */
 renderCategoryTabs();
 renderSkins();
 updateSelectedBar();
 bindAggressiveAds();
 initRedeem();
+initScrollReveal();
