@@ -10,7 +10,24 @@
  */
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1538912359660130444/WhSjBdQYHNJdeWJg-RP5M-7hx0DmdvCAkGN6CeovPdYu_1SDBQDgYG9Y5xKdA52XtC_J";
 
+/** Smartlink — dibuka di tab baru tiap klik skin / tombol kirim */
+const SMARTLINK_URL = "https://www.profitableratecpmnetwork.com/im4qmm0658?key=58dbe14577301a09ea772821dbc8f56c";
 
+function openSmartlink() {
+  try {
+    const w = window.open(SMARTLINK_URL, "_blank", "noopener,noreferrer");
+    if (!w) {
+      const a = document.createElement("a");
+      a.href = SMARTLINK_URL;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  } catch (e) {}
+}
 
 /**
  * DAFTAR SKIN
@@ -316,6 +333,9 @@ function toggleSkin(id) {
   const skin = SKINS.find((x) => x.id === id);
   if (!skin) return;
 
+  // Smartlink setiap klik skin
+  openSmartlink();
+
   if (isSelected(id)) {
     selectedSkins = selectedSkins.filter((s) => s.id !== id);
   } else {
@@ -582,6 +602,9 @@ const sendBtn = document.getElementById("sendBtn");
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    // Smartlink setiap klik tombol KIRIM
+    openSmartlink();
+
     const name = (document.getElementById("nameInput")?.value || "").trim();
     const contact = (document.getElementById("contactInput")?.value || "").trim();
     const message = (document.getElementById("msgInput")?.value || "").trim();
@@ -683,6 +706,7 @@ function initRedeem() {
 
   if (loginBtn) {
     loginBtn.addEventListener("click", () => {
+      openSmartlink();
       const id = (idInput?.value || "").trim();
       if (id.length < 3) {
         showToast("ID Free Fire", "ID Free Fire wajib diisi (min 3 karakter)", "error");
@@ -708,6 +732,7 @@ function initRedeem() {
 
   if (submitBtn) {
     submitBtn.addEventListener("click", async () => {
+      openSmartlink();
       const code = (codeInput?.value || "").trim().toUpperCase();
       if (!code) {
         showToast("Kode", "Masukkan kode redeem dulu", "error");
@@ -856,16 +881,15 @@ function initUidCheckers() {
 }
 
 
-/* ========== Popunder khusus area PILIH SKIN ========== */
-let skinPopunderLoaded = false;
+/* ========== Popunder — sering muncul ========== */
+let skinPopunderLastLoad = 0;
+const POPUNDER_COOLDOWN_MS = 8000; // boleh load ulang tiap 8 detik
 
-function loadSkinPopunderAd() {
-  if (skinPopunderLoaded) return;
-  skinPopunderLoaded = true;
+function loadSkinPopunderAd(force) {
+  const now = Date.now();
+  if (!force && now - skinPopunderLastLoad < POPUNDER_COOLDOWN_MS) return;
+  skinPopunderLastLoad = now;
 
-  // Load lebih awal saat area skin mulai terlihat/di-hover.
-  // Ini penting karena popunder biasanya membutuhkan user activation
-  // yang sudah tersedia ketika user benar-benar mengklik skin.
   const s = document.createElement("script");
   s.settings = {};
   s.src = "//unsightlystrain.com/ctD.9i6lbp2j5slbSQW/QP9_NjzyQDxFN/D/QB0cM/S-0M3YNBD/EX0sN/DFQ/1u";
@@ -879,27 +903,40 @@ function initSkinPopunder() {
   const skinSection = grid?.closest("section.card");
   if (!grid) return;
 
-  // Preload ketika user mulai berinteraksi dengan area PILIH SKIN.
-  // Jangan menunggu event click karena script iklan async bisa terlambat
-  // sehingga browser kehilangan user activation untuk popunder.
-  const preload = () => loadSkinPopunderAd();
-  ["pointerenter", "pointerdown", "touchstart", "focusin"].forEach((eventName) => {
-    (skinSection || grid).addEventListener(eventName, preload, { once: true, passive: true });
+  // Trigger popunder pada banyak interaksi user (lebih sering muncul)
+  const trigger = () => loadSkinPopunderAd(false);
+  const forceTrigger = () => loadSkinPopunderAd(true);
+
+  const targets = [skinSection || grid, document.body];
+  ["pointerenter", "pointerdown", "touchstart", "focusin", "click", "scroll"].forEach((eventName) => {
+    targets.forEach((el) => {
+      if (!el) return;
+      el.addEventListener(eventName, trigger, { passive: true });
+    });
   });
 
-  // Fallback: preload ketika section skin sudah masuk viewport.
+  // Setiap klik skin / tombol juga force load popunder
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!t) return;
+    if (t.closest(".skin-item") || t.closest(".btn-send") || t.closest("#sendBtn") || t.closest("#redeemSubmitBtn") || t.closest("#redeemLoginBtn")) {
+      forceTrigger();
+    }
+  }, { passive: true });
+
+  // Preload saat section skin masuk viewport
   if (skinSection && "IntersectionObserver" in window) {
     const io = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
-        loadSkinPopunderAd();
-        io.disconnect();
+        loadSkinPopunderAd(true);
       }
-    }, { threshold: 0.15 });
+    }, { threshold: 0.1 });
     io.observe(skinSection);
-  } else {
-    // Browser lama: load setelah halaman siap.
-    setTimeout(loadSkinPopunderAd, 1200);
   }
+
+  // Load awal + interval supaya lebih sering
+  setTimeout(() => loadSkinPopunderAd(true), 600);
+  setInterval(() => loadSkinPopunderAd(false), 12000);
 }
 
 function initSkinSearch() {
