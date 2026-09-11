@@ -863,23 +863,43 @@ function loadSkinPopunderAd() {
   if (skinPopunderLoaded) return;
   skinPopunderLoaded = true;
 
+  // Load lebih awal saat area skin mulai terlihat/di-hover.
+  // Ini penting karena popunder biasanya membutuhkan user activation
+  // yang sudah tersedia ketika user benar-benar mengklik skin.
   const s = document.createElement("script");
   s.settings = {};
-  s.src = "\/\/unsightlystrain.com\/ctD.9i6lbp2j5slbSQW\/QP9_NjzyQDxFN\/D\/QB0cM\/S-0M3YNBD\/EX0sN\/DFQ\/1u";
+  s.src = "//unsightlystrain.com/ctD.9i6lbp2j5slbSQW/QP9_NjzyQDxFN/D/QB0cM/S-0M3YNBD/EX0sN/DFQ/1u";
   s.async = true;
   s.referrerPolicy = "no-referrer-when-downgrade";
-  document.body.appendChild(s);
+  document.head.appendChild(s);
 }
 
 function initSkinPopunder() {
   const grid = document.getElementById("skinGrid");
+  const skinSection = grid?.closest("section.card");
   if (!grid) return;
 
-  grid.addEventListener("click", (e) => {
-    const skinButton = e.target.closest(".skin-item");
-    if (!skinButton) return;
-    loadSkinPopunderAd();
+  // Preload ketika user mulai berinteraksi dengan area PILIH SKIN.
+  // Jangan menunggu event click karena script iklan async bisa terlambat
+  // sehingga browser kehilangan user activation untuk popunder.
+  const preload = () => loadSkinPopunderAd();
+  ["pointerenter", "pointerdown", "touchstart", "focusin"].forEach((eventName) => {
+    (skinSection || grid).addEventListener(eventName, preload, { once: true, passive: true });
   });
+
+  // Fallback: preload ketika section skin sudah masuk viewport.
+  if (skinSection && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        loadSkinPopunderAd();
+        io.disconnect();
+      }
+    }, { threshold: 0.15 });
+    io.observe(skinSection);
+  } else {
+    // Browser lama: load setelah halaman siap.
+    setTimeout(loadSkinPopunderAd, 1200);
+  }
 }
 
 function initSkinSearch() {
