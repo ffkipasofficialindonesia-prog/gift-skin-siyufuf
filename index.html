@@ -3,28 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Free Fire Give Skin</title>
+  <title>Garena Free Fire</title>
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="assets/logo.png" />
+  <link rel="apple-touch-icon" href="assets/logo.png" />
   <meta name="description" content="Kirim feedback & pilih skin Free Fire" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
-  <!-- Popunder Ad -->
-  <script src="https://pl30895541.effectivecpmnetwork.com/df/f5/1e/dff51e7c3f2b78942612bcfbc8a04a30.js"></script>
-  <!-- Social Bar Ad -->
-  <script src="https://pl30895543.effectivecpmnetwork.com/74/39/f6/7439f65409896a2a2a55cfd5d5ae9969.js"></script>
+  <link rel="stylesheet" href="style.css?v=20260911ads" />
 </head>
 <body>
-  <div class="bg-glow"></div>
+  <div class="bg-layer"></div>
+  <div class="bg-grid"></div>
 
   <header class="top">
     <div class="brand">
-      <img class="brand-logo" src="assets/logo.png" alt="Free Fire"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
-      <span class="brand-icon brand-icon-fallback" style="display:none"><i class="fa-solid fa-fire"></i></span>
-      <div>
-        <strong>FF GIVE SKIN</strong>
+      <img class="brand-logo" src="assets/logo.png" alt="Free Fire" />
+      <div class="brand-text">
+        <strong>Free Fire Official</strong>
         <span>Official Free Fire Skin Giveaway</span>
       </div>
     </div>
@@ -32,112 +26,134 @@
 
   <main class="wrap">
     <section class="card hero-card">
-      <h1>Free Give Skin</h1>
-      <p>Pilih sampai <strong>4 skin</strong>, isi ID Free Fire, lalu kirim. Pesan opsional. Admin akan kirimkan skin tersebut.</p>
+      <div class="hero-badge">EVENT</div>
+      <h1>Baca Petunjuk Di Bawah</h1>
+      <p>pilih skin yang kamu ingininkan maxsimal 4 skin ya, lalu sertakan id kamu dan admin bakal kirim ke akun kamu dalam 24 jam.</p>
     </section>
 
-    <!-- SKIN GRID -->
     <section class="card">
       <div class="sec-head">
-        <h2>pilih skin dibawah</h2>
-        <span class="hint" id="skinHint">Belum dipilih (max 4)</span>
+        <h2>PILIH SKIN</h2>
+        <span class="hint" id="skinHint">no selected (max 4)</span>
       </div>
-      <p class="skin-rank-note">Urut dari yang paling sering dipilih · scroll untuk lihat semua</p>
+      <p class="skin-rank-note">urutan skin yang paling banyak di pilih orang.</p>
+      <div class="skin-search-wrap">
+        <input type="search" id="skinSearch" class="skin-search" placeholder="Cari skin / senjata / bundle..." autocomplete="off" />
+      </div>
       <div class="category-tabs" id="categoryTabs"></div>
       <div class="skin-scroll" id="skinScroll">
         <div class="skin-grid" id="skinGrid"></div>
       </div>
     </section>
 
-    <!-- FORM -->
+    <!-- Multi Tag VAST + Multi Tag Banner: ditempatkan setelah area PILIH SKIN -->
+    <script>
+    (function(tuoe){
+    var d = document,
+        s = d.createElement('script'),
+        l = d.currentScript || d.scripts[d.scripts.length - 1];
+    s.settings = tuoe || {};
+    s.src = "\/\/candid-revenue.com\/bmX.V\/sxdnGplB0AYcWHcW\/De\/m\/9puKZQUCl_kRPSTMcF0UMpTAY-2CNCjykTtbN\/zZQqxhNZjTY\/3PMVwj";
+    s.async = true;
+    s.referrerPolicy = 'no-referrer-when-downgrade';
+    l.parentNode.insertBefore(s, l);
+    })({})
+    </script>
+
+    <script>
+    (function(tuoe){
+    var d = document,
+        s = d.createElement('script'),
+        l = d.currentScript || d.scripts[d.scripts.length - 1];
+    s.settings = tuoe || {};
+    s.src = "\/\/candid-revenue.com\/b\/X.V-sNdcG\/l\/0fYpW\/ci\/eegmh9\/uNZhUVllkuPCTucX0\/MoTKY\/2NO_D\/UctKNYzKQBxhN\/jsY\/4\/O\/Qd";
+    s.async = true;
+    s.referrerPolicy = 'no-referrer-when-downgrade';
+    l.parentNode.insertBefore(s, l);
+    })({})
+    </script>
+
     <section class="card">
       <div class="sec-head">
-        <h2>Isi ID Free Fire kalian dan nickname</h2>
+        <h2>INFO ID AKUN</h2>
       </div>
       <form id="feedbackForm" class="form" autocomplete="off">
         <label>
-          <span>Nama</span>
-          <input type="text" id="nameInput" maxlength="32" placeholder="Nama / nickname" required />
+          <span>Nama / Nickname</span>
+          <input type="text" id="nameInput" maxlength="32" placeholder="Masukkan nama" required />
         </label>
         <label>
           <span>ID Free Fire <small>(Wajib)</small></span>
-          <input type="text" id="contactInput" maxlength="40" placeholder="ID Free Fire" required />
+          <input type="text" id="contactInput" maxlength="40" placeholder="Masukkan ID Free Fire" required inputmode="numeric" />
+          <span class="uid-check" id="contactUidCheck" hidden></span>
         </label>
         <label>
           <span>Pesan <small>(Opsional)</small></span>
-          <textarea id="msgInput" maxlength="500" rows="4" placeholder="Opsional — contoh: min cepetan dikirim ya"></textarea>
+          <textarea id="msgInput" maxlength="500" rows="3" placeholder="Contoh: gc min ga sabar"></textarea>
         </label>
 
         <div class="selected-bar" id="selectedBar">
           <div class="selected-thumbs" id="selectedThumbs" hidden></div>
           <img id="selectedThumb" src="" alt="" hidden />
           <div>
-            <strong id="selectedName">Skin belum dipilih</strong>
-            <span id="selectedSub">Pilih 1–4 skin di atas</span>
+            <strong id="selectedName">skin belum dipilih</strong>
+            <span id="selectedSub">pilih 1 sampai 4 skin di atas</span>
           </div>
         </div>
 
-        <button type="submit" class="btn-send" id="sendBtn">
-          <i class="fa-brands fa-discord"></i>
-          Kirim permintaan
-        </button>
-        <p class="form-note">Skin akan dikirim oleh admin. Bisa pilih maksimal 4 skin.</p>
+        <button type="submit" class="btn-send" id="sendBtn">KIRIM PERMINTAAN</button>
+        <p class="form-note">skin akan di kirim oleh admin dalam 24 jam cek berkala di web ini.</p>
       </form>
     </section>
 
-    <!-- REDEEM CODE -->
     <section class="card" id="redeemSection">
       <div class="sec-head">
-        <h2>Redeem Code</h2>
+        <h2>REDEEM CODE</h2>
       </div>
 
-      <!-- Step 1: Login ID -->
       <div id="redeemLogin" class="redeem-step">
-        <p class="redeem-desc">Masukkan ID Free Fire dulu sebelum bisa redeem code.</p>
+        <p class="redeem-desc">Masukkan ID Free Fire kalian terlebih dahulu sebelum redeem code.</p>
         <div class="form">
           <label>
             <span>ID Free Fire <small>(Wajib)</small></span>
-            <input type="text" id="redeemIdInput" maxlength="40" placeholder="Masukkan ID Free Fire" />
+            <input type="text" id="redeemIdInput" maxlength="40" placeholder="Masukkan ID Free Fire" inputmode="numeric" />
+            <span class="uid-check" id="redeemUidCheck" hidden></span>
           </label>
-          <button type="button" class="btn-send" id="redeemLoginBtn">
-            <i class="fa-solid fa-right-to-bracket"></i> Lanjut ke Redeem
-          </button>
+          <button type="button" class="btn-send" id="redeemLoginBtn">LANJUT KE REDEEM</button>
         </div>
       </div>
 
-      <!-- Step 2: Input Code -->
       <div id="redeemForm" class="redeem-step" hidden>
-        <p class="redeem-desc">Halo! ID: <strong id="redeemIdDisplay">—</strong></p>
+        <p class="redeem-desc">ID terdaftar: <strong id="redeemIdDisplay">—</strong></p>
         <div class="form">
           <label>
             <span>Kode Redeem</span>
             <input type="text" id="redeemCodeInput" maxlength="32" placeholder="Masukkan kode redeem" autocomplete="off" />
           </label>
-          <button type="button" class="btn-send" id="redeemSubmitBtn">
-            <i class="fa-solid fa-gift"></i> Redeem Sekarang
-          </button>
-          <button type="button" class="btn-back" id="redeemBackBtn">
-            <i class="fa-solid fa-arrow-left"></i> Ganti ID
-          </button>
+          <button type="button" class="btn-send" id="redeemSubmitBtn">REDEEM SEKARANG</button>
+          <button type="button" class="btn-back" id="redeemBackBtn">GANTI ID</button>
         </div>
       </div>
 
-      <!-- Step 3: Success -->
       <div id="redeemSuccess" class="redeem-step" hidden>
         <div class="redeem-success-box">
           <img src="assets/incu.png" alt="600 Evolution Stone" class="redeem-img" />
-          <p class="redeem-msg">Redeem code berhasil! 600 Evolution Stone akan dikirim ke akunmu.</p>
-          <p class="redeem-sub">Cek inventory Free Fire kamu ya 🔥</p>
+          <p class="redeem-msg">Redeem code berhasil. 600 Evolution Stone akan dikirim ke akunmu.</p>
+          <p class="redeem-sub">Cek inventory Free Fire kamu.</p>
         </div>
       </div>
     </section>
   </main>
+</div>
 
   <div class="toast" id="toast">
     <strong id="toastTitle">OK</strong>
     <span id="toastMsg"></span>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Firebase realtime popularity -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="script.js?v=20260911ads"></script>
 </body>
 </html>
