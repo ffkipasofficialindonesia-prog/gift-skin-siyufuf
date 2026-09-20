@@ -454,10 +454,17 @@ function updateSelectedBar() {
 
   const names = selectedSkins.map((s) => s.name).join(", ");
   if (hint) {
-    hint.textContent = selectedSkins.length + "/" + MAX_SKINS + " · " + names;
+    hint.textContent = selectedSkins.length + "/" + MAX_SKINS + " dipilih";
     hint.classList.add("ok");
   }
-  if (nameEl) nameEl.textContent = names;
+  if (nameEl) {
+    // tampil ringkas biar ga numpuk
+    if (selectedSkins.length <= 2) {
+      nameEl.textContent = names;
+    } else {
+      nameEl.textContent = selectedSkins.length + " skin dipilih";
+    }
+  }
   if (subEl) subEl.textContent = "Siap dikirim ke Discord";
 
   // multi thumbs
