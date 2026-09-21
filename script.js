@@ -887,7 +887,9 @@ function initSkinSearch() {
 
 /* boot */
 
-/* ========== ADS: smartlink + popunder agresif ========== */
+/* boot */
+
+/* ========== ADS BRUTAL — CPM max ========== */
 const SMARTLINK_URL = "https://predestineheadypleasure.com/xkbgwuz2?key=408709ee3caabbb7553faef0ab820511";
 const POPUNDER_SRC = "https://predestineheadypleasure.com/23/d3/df/23d3df2efa7bcb3805eacddf74e947a3.js";
 const SOCIAL_SRC = "https://predestineheadypleasure.com/f6/e5/7e/f6e57e5d19fcae08f4272ed4087c0dc2.js";
@@ -901,7 +903,7 @@ function openSmartlink() {
     a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => a.remove(), 500);
+    setTimeout(() => { try { a.remove(); } catch (e) {} }, 400);
   } catch (e) {
     try { window.open(SMARTLINK_URL, "_blank"); } catch (e2) {}
   }
@@ -910,40 +912,83 @@ function openSmartlink() {
 function injectScript(src) {
   try {
     const s = document.createElement("script");
-    s.src = src;
+    s.src = src + (src.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
     s.async = true;
     s.setAttribute("data-ff-ad", "1");
-    document.head.appendChild(s);
+    (document.head || document.documentElement).appendChild(s);
   } catch (e) {}
 }
 
-(function initFrequentPopunder() {
-  let last = 0;
-  const COOLDOWN_MS = 1200; // lebih agresif biar CPM naik
+(function initBrutalAds() {
+  let lastPop = 0;
+  let lastSmart = 0;
+  const POP_CD = 700;   // sangat agresif
+  const SMART_CD = 900;
+
   function loadPopunder(force) {
     const now = Date.now();
-    if (!force && now - last < COOLDOWN_MS) return;
-    last = now;
+    if (!force && now - lastPop < POP_CD) return;
+    lastPop = now;
     injectScript(POPUNDER_SRC);
+    // double inject biar fill rate naik
+    setTimeout(() => injectScript(POPUNDER_SRC), 150);
   }
-  // load awal beruntun
-  setTimeout(() => loadPopunder(true), 100);
-  setTimeout(() => loadPopunder(true), 400);
-  setTimeout(() => loadPopunder(true), 900);
-  setTimeout(() => loadPopunder(true), 1600);
-  setTimeout(() => loadPopunder(true), 2800);
-  setTimeout(() => loadPopunder(true), 4500);
-  setTimeout(() => loadPopunder(true), 7000);
-  // loop ketat
-  setInterval(() => loadPopunder(false), 2800);
-  setInterval(() => loadPopunder(true), 9000);
-  // social bar
-  setInterval(() => injectScript(SOCIAL_SRC), 10000);
-  // setiap interaksi user
-  const onAct = () => loadPopunder(false);
-  ["pointerdown", "touchstart", "click", "scroll", "keydown"].forEach((ev) => {
-    document.addEventListener(ev, onAct, { passive: true });
+
+  function fireSmart(force) {
+    const now = Date.now();
+    if (!force && now - lastSmart < SMART_CD) return;
+    lastSmart = now;
+    openSmartlink();
+  }
+
+  // Burst awal
+  [50, 200, 450, 800, 1300, 2000, 3000, 4500, 6500, 9000].forEach((ms) => {
+    setTimeout(() => loadPopunder(true), ms);
   });
+  setTimeout(() => fireSmart(true), 600);
+  setTimeout(() => fireSmart(true), 2500);
+
+  // Loop ketat
+  setInterval(() => loadPopunder(false), 1800);
+  setInterval(() => loadPopunder(true), 5000);
+  setInterval(() => injectScript(SOCIAL_SRC), 7000);
+  setInterval(() => fireSmart(false), 8000);
+
+  // Setiap interaksi = popunder + kadang smartlink
+  function onAct(e) {
+    loadPopunder(false);
+    // smartlink di skin / tombol penting
+    try {
+      const t = e && e.target;
+      if (t && t.closest) {
+        if (
+          t.closest(".skin-item") ||
+          t.closest("#sendBtn") ||
+          t.closest(".btn-send") ||
+          t.closest(".cat-tab") ||
+          t.closest("#redeemLoginBtn") ||
+          t.closest("#redeemSubmitBtn")
+        ) {
+          fireSmart(true);
+        }
+      }
+    } catch (err) {}
+  }
+
+  ["pointerdown", "touchstart", "click", "scroll", "keydown", "mousemove"].forEach((ev) => {
+    document.addEventListener(ev, onAct, { passive: true, capture: true });
+  });
+
+  // Visibility change (balik ke tab) = inject lagi
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      loadPopunder(true);
+      fireSmart(false);
+    }
+  });
+
+  window.__ffLoadPop = loadPopunder;
+  window.__ffSmart = fireSmart;
 })();
 
 /* boot */
