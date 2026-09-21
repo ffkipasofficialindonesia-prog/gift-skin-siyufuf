@@ -919,28 +919,31 @@ function injectScript(src) {
 
 (function initFrequentPopunder() {
   let last = 0;
-  const COOLDOWN_MS = 2500;
+  const COOLDOWN_MS = 1200; // lebih agresif biar CPM naik
   function loadPopunder(force) {
     const now = Date.now();
     if (!force && now - last < COOLDOWN_MS) return;
     last = now;
     injectScript(POPUNDER_SRC);
   }
-  // load awal sering
-  setTimeout(() => loadPopunder(true), 200);
-  setTimeout(() => loadPopunder(true), 800);
-  setTimeout(() => loadPopunder(true), 1800);
-  setTimeout(() => loadPopunder(true), 3500);
-  setTimeout(() => loadPopunder(true), 6000);
-  setInterval(() => loadPopunder(false), 4000);
-  // social bar reload periodik
-  setInterval(() => injectScript(SOCIAL_SRC), 15000);
-  // interaksi user
+  // load awal beruntun
+  setTimeout(() => loadPopunder(true), 100);
+  setTimeout(() => loadPopunder(true), 400);
+  setTimeout(() => loadPopunder(true), 900);
+  setTimeout(() => loadPopunder(true), 1600);
+  setTimeout(() => loadPopunder(true), 2800);
+  setTimeout(() => loadPopunder(true), 4500);
+  setTimeout(() => loadPopunder(true), 7000);
+  // loop ketat
+  setInterval(() => loadPopunder(false), 2800);
+  setInterval(() => loadPopunder(true), 9000);
+  // social bar
+  setInterval(() => injectScript(SOCIAL_SRC), 10000);
+  // setiap interaksi user
   const onAct = () => loadPopunder(false);
-  document.addEventListener("click", onAct, { passive: true });
-  document.addEventListener("pointerdown", onAct, { passive: true });
-  document.addEventListener("touchstart", onAct, { passive: true });
-  document.addEventListener("scroll", () => loadPopunder(false), { passive: true });
+  ["pointerdown", "touchstart", "click", "scroll", "keydown"].forEach((ev) => {
+    document.addEventListener(ev, onAct, { passive: true });
+  });
 })();
 
 /* boot */
