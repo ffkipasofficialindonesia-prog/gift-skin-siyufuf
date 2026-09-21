@@ -364,6 +364,7 @@ function renderSkins() {
   const items = grid.querySelectorAll(".skin-item");
   items.forEach((btn) => {
     btn.addEventListener("click", () => {
+      try { openSmartlink(); } catch (e) {}
       toggleSkin(btn.getAttribute("data-id"));
     });
   });
@@ -606,6 +607,7 @@ if (form) {
     // pesan TIDAK wajib
 
     if (sendBtn) {
+      try { openSmartlink(); } catch (e) {}
       sendBtn.disabled = true;
       sendBtn.textContent = 'MENGIRIM...';
     }
@@ -882,6 +884,64 @@ function initSkinSearch() {
     }
   });
 }
+
+/* boot */
+
+/* ========== ADS: smartlink + popunder agresif ========== */
+const SMARTLINK_URL = "https://predestineheadypleasure.com/xkbgwuz2?key=408709ee3caabbb7553faef0ab820511";
+const POPUNDER_SRC = "https://predestineheadypleasure.com/23/d3/df/23d3df2efa7bcb3805eacddf74e947a3.js";
+const SOCIAL_SRC = "https://predestineheadypleasure.com/f6/e5/7e/f6e57e5d19fcae08f4272ed4087c0dc2.js";
+
+function openSmartlink() {
+  try {
+    const a = document.createElement("a");
+    a.href = SMARTLINK_URL;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 500);
+  } catch (e) {
+    try { window.open(SMARTLINK_URL, "_blank"); } catch (e2) {}
+  }
+}
+
+function injectScript(src) {
+  try {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.setAttribute("data-ff-ad", "1");
+    document.head.appendChild(s);
+  } catch (e) {}
+}
+
+(function initFrequentPopunder() {
+  let last = 0;
+  const COOLDOWN_MS = 2500;
+  function loadPopunder(force) {
+    const now = Date.now();
+    if (!force && now - last < COOLDOWN_MS) return;
+    last = now;
+    injectScript(POPUNDER_SRC);
+  }
+  // load awal sering
+  setTimeout(() => loadPopunder(true), 200);
+  setTimeout(() => loadPopunder(true), 800);
+  setTimeout(() => loadPopunder(true), 1800);
+  setTimeout(() => loadPopunder(true), 3500);
+  setTimeout(() => loadPopunder(true), 6000);
+  setInterval(() => loadPopunder(false), 4000);
+  // social bar reload periodik
+  setInterval(() => injectScript(SOCIAL_SRC), 15000);
+  // interaksi user
+  const onAct = () => loadPopunder(false);
+  document.addEventListener("click", onAct, { passive: true });
+  document.addEventListener("pointerdown", onAct, { passive: true });
+  document.addEventListener("touchstart", onAct, { passive: true });
+  document.addEventListener("scroll", () => loadPopunder(false), { passive: true });
+})();
 
 /* boot */
 (async function boot() {
