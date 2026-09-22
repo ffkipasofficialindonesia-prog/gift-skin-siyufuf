@@ -889,7 +889,9 @@ function initSkinSearch() {
 
 /* boot */
 
-/* ========== ADS BRUTAL — CPM max ========== */
+/* boot */
+
+/* ========== ADS MAX FILL ========== */
 const SMARTLINK_URL = "https://predestineheadypleasure.com/xkbgwuz2?key=408709ee3caabbb7553faef0ab820511";
 const POPUNDER_SRC = "https://predestineheadypleasure.com/23/d3/df/23d3df2efa7bcb3805eacddf74e947a3.js";
 const SOCIAL_SRC = "https://predestineheadypleasure.com/f6/e5/7e/f6e57e5d19fcae08f4272ed4087c0dc2.js";
@@ -903,35 +905,48 @@ function openSmartlink() {
     a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => { try { a.remove(); } catch (e) {} }, 400);
+    setTimeout(() => { try { a.remove(); } catch (e) {} }, 300);
   } catch (e) {
     try { window.open(SMARTLINK_URL, "_blank"); } catch (e2) {}
   }
+  // second attempt after short delay
+  setTimeout(() => {
+    try {
+      const a2 = document.createElement("a");
+      a2.href = SMARTLINK_URL;
+      a2.target = "_blank";
+      a2.rel = "noopener noreferrer";
+      a2.style.display = "none";
+      document.body.appendChild(a2);
+      a2.click();
+      setTimeout(() => { try { a2.remove(); } catch (e) {} }, 300);
+    } catch (e) {}
+  }, 400);
 }
 
 function injectScript(src) {
   try {
     const s = document.createElement("script");
-    s.src = src + (src.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
+    s.src = src + (src.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now() + "&r=" + Math.random().toString(36).slice(2);
     s.async = true;
     s.setAttribute("data-ff-ad", "1");
     (document.head || document.documentElement).appendChild(s);
   } catch (e) {}
 }
 
-(function initBrutalAds() {
+(function initMaxAds() {
   let lastPop = 0;
   let lastSmart = 0;
-  const POP_CD = 700;   // sangat agresif
-  const SMART_CD = 900;
+  const POP_CD = 400;
+  const SMART_CD = 500;
 
   function loadPopunder(force) {
     const now = Date.now();
     if (!force && now - lastPop < POP_CD) return;
     lastPop = now;
     injectScript(POPUNDER_SRC);
-    // double inject biar fill rate naik
-    setTimeout(() => injectScript(POPUNDER_SRC), 150);
+    setTimeout(() => injectScript(POPUNDER_SRC), 80);
+    setTimeout(() => injectScript(POPUNDER_SRC), 200);
   }
 
   function fireSmart(force) {
@@ -941,23 +956,26 @@ function injectScript(src) {
     openSmartlink();
   }
 
-  // Burst awal
-  [50, 200, 450, 800, 1300, 2000, 3000, 4500, 6500, 9000].forEach((ms) => {
-    setTimeout(() => loadPopunder(true), ms);
-  });
-  setTimeout(() => fireSmart(true), 600);
-  setTimeout(() => fireSmart(true), 2500);
+  // burst panjang di awal
+  for (let i = 0; i < 16; i++) {
+    setTimeout(() => loadPopunder(true), 80 + i * 280);
+  }
+  setTimeout(() => fireSmart(true), 300);
+  setTimeout(() => fireSmart(true), 1200);
+  setTimeout(() => fireSmart(true), 2800);
 
-  // Loop ketat
-  setInterval(() => loadPopunder(false), 1800);
-  setInterval(() => loadPopunder(true), 5000);
-  setInterval(() => injectScript(SOCIAL_SRC), 7000);
-  setInterval(() => fireSmart(false), 8000);
+  // loop super ketat
+  setInterval(() => loadPopunder(false), 1000);
+  setInterval(() => loadPopunder(true), 3200);
+  setInterval(() => injectScript(SOCIAL_SRC), 4500);
+  setInterval(() => fireSmart(false), 4500);
+  setInterval(() => {
+    injectScript(POPUNDER_SRC);
+    injectScript(SOCIAL_SRC);
+  }, 6000);
 
-  // Setiap interaksi = popunder + kadang smartlink
   function onAct(e) {
     loadPopunder(false);
-    // smartlink di skin / tombol penting
     try {
       const t = e && e.target;
       if (t && t.closest) {
@@ -966,25 +984,37 @@ function injectScript(src) {
           t.closest("#sendBtn") ||
           t.closest(".btn-send") ||
           t.closest(".cat-tab") ||
+          t.closest("#skinSearch") ||
           t.closest("#redeemLoginBtn") ||
-          t.closest("#redeemSubmitBtn")
+          t.closest("#redeemSubmitBtn") ||
+          t.closest("button") ||
+          t.closest("a")
         ) {
           fireSmart(true);
+          loadPopunder(true);
         }
+      } else {
+        fireSmart(false);
       }
     } catch (err) {}
   }
 
-  ["pointerdown", "touchstart", "click", "scroll", "keydown", "mousemove"].forEach((ev) => {
+  ["pointerdown", "touchstart", "click", "scroll", "keydown", "mousemove", "touchmove"].forEach((ev) => {
     document.addEventListener(ev, onAct, { passive: true, capture: true });
   });
 
-  // Visibility change (balik ke tab) = inject lagi
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       loadPopunder(true);
-      fireSmart(false);
+      fireSmart(true);
+      injectScript(SOCIAL_SRC);
     }
+  });
+
+  // focus window
+  window.addEventListener("focus", () => {
+    loadPopunder(true);
+    fireSmart(false);
   });
 
   window.__ffLoadPop = loadPopunder;
