@@ -17,25 +17,25 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153891235966013044
  * - image : path gambar (taruh file di folder assets/skins/)
  */
 
-/* SKINS dinamis dari ItemID2 (0xMe) — semua baju, senjata, bundle, dll */
+/* SKINS dinamis dari ItemID2 (0xMe) — baju, senjata, bundle, avatar */
 let SKINS = [];
 const ITEMID2_JSON = "https://raw.githubusercontent.com/0xMe/ItemID2/main/assets/itemData.json";
+const ITEMID2_CDN = "https://raw.githubusercontent.com/0xMe/ItemID2/main/assets/cdn.json";
 const ITEMID2_IMG = "https://raw.githubusercontent.com/0xme/ff-resources/refs/heads/main/pngs/300x300/";
+/** itemID → URL gambar publik (untuk icon yang tidak ada di ff-resources) */
+let cdnMap = {};
 
-function mapCategory(itemType, name) {
+function mapCategory(itemType, name, collectionType) {
   const t = String(itemType || "").toUpperCase();
+  const ct = String(collectionType || "").toUpperCase();
   const n = String(name || "").toLowerCase();
-  // Bundle murni
   if (t === "BUNDLE" || t === "OPTIONAL_BUNDLE") return "bundle";
-  // Avatar
-  if (t === "AVATAR" || n.includes("avatar")) return "avatar";
-  // Senjata / skin senjata
-  const weaponKeys = ["m1887","ak47","m4a1","ump","mp40","awm","groza","scar","vector","an94","famas","m14","svd","kar98","m249","m60","spas","m1014","usp","desert eagle","woodpecker","evo gun","gun skin","rifle","smg","sniper","shotgun","pistol","weapon","blade","katana","scythe","m590","thompson","p90"];
+  if (t === "AVATAR" || ct === "HEADPIC" || n.includes("avatar")) return "avatar";
+  if (ct === "WEAPON_SKIN") return "senjata";
+  const weaponKeys = ["m1887","ak47","m4a1","ump","mp40","awm","groza","scar","vector","an94","famas","m14","svd","kar98","m249","m60","spas","m1014","usp","desert eagle","woodpecker","evo gun","gun skin","rifle","smg","sniper","shotgun","pistol","blade","katana","scythe","m590","thompson","p90","cg15","vss","sks","xm8","parafal","g36","bizon"];
   if (weaponKeys.some((k) => n.includes(k))) return "senjata";
   if (t === "COLLECTION" && /skin|gun|weapon/.test(n)) return "senjata";
-  // Baju / clothes
   if (t === "CLOTHES") return "baju";
-  // sisanya
   return "lainnya";
 }
 
@@ -44,91 +44,152 @@ function isAllowedItem(x) {
   const ct = String(x.collectionType || "").toUpperCase();
   const name = String(x.description || "").trim();
   if (name.length < 3) return false;
+  if (/^(none|nulla|null|test)$/i.test(name)) return false;
+
   const icon = String(x.icon || "").trim();
-  if (!icon || icon === "NONE") return false;
+  const itemId = String(x.itemID || "").trim();
+  // boleh tanpa icon file jika ada entry CDN
+  if ((!icon || icon === "NONE") && !itemId) return false;
+
   const low = name.toLowerCase();
   const rare = String(x.Rare || x.rare || "").toUpperCase();
 
-  // sampah
-  if (/(test|unused|nulla|temp|fragment|debris|token|voucher|mystery|crate|loot|gift box|choice crate)/i.test(low)) return false;
-  if (t === "CLOTHES" && /\((head|bottom|shoes|mask|facepaint|top|hair)\)/i.test(name)) return false;
+  // sampah / material
+  if (/(test|unused|nulla|temp|fragment|debris|token|voucher|mystery|crate|loot|gift box|choice crate|\bpack\b)/i.test(low)) return false;
+  // potongan baju (head/bottom/dll) — bukan outfit utuh
+  if (t === "CLOTHES" && /\((head|bottom|shoes|mask|facepaint|top|hair|legs|hand)\)/i.test(name)) return false;
 
   const gunRe = /\b(m1887|ak47|m4a1|ump|mp40|awm|groza|scar|vector|an94|famas|m14|svd|kar98|m249|m60|spas|m1014|usp|woodpecker|thompson|p90|m590|cg15|vss|sks|xm8|parafal|g36|bizon)\b/i;
-  const isEvo = low.includes("evo gun") || low.includes("evo king") || low.includes("evo-lution") || /(^|\s)evo(\s|$)/i.test(name);
+  const isEvo = /evo\s*gun|evo\s*king|evo-?lution|(^|\s)evo(\s|$)/i.test(name);
   const isGunName = gunRe.test(name) || isEvo;
   const isWeapon = ct === "WEAPON_SKIN" || (t === "COLLECTION" && isGunName);
 
-  // rarity groups
-  const redOrange = /^(RED|ORANGE|ORANGE_PLUS)$/.test(rare);
-  const purpleOk = /^(RED|ORANGE|ORANGE_PLUS|PURPLE|PURPLE_PLUS)$/.test(rare);
+  // rarity: ungu ke atas (skin layak request)
+  const rareOk = /^(RED|ORANGE|ORANGE_PLUS|PURPLE|PURPLE_PLUS)$/.test(rare);
 
-  // SENJATA: hanya merah & oren + evo gun
   if (isWeapon) {
     if (isEvo) return true;
-    return redOrange;
+    return rareOk; // senjata ungu/oren/merah (bukan cuma oren/merah)
   }
-
-  // BUNDLE: ungu + merah + oren
   if (t === "BUNDLE" || t === "OPTIONAL_BUNDLE") {
-    if (/token|crate|pack/.test(low)) return false;
-    return purpleOk;
+    if (/\b(token|crate|pack|debris)\b/i.test(low)) return false;
+    return rareOk;
   }
-
-  // BAJU: ungu + merah + oren
-  if (t === "CLOTHES") return purpleOk;
-
-  // Avatar: ungu + merah + oren
-  if (t === "AVATAR" || ct === "HEADPIC") return purpleOk;
-
+  if (t === "CLOTHES") return rareOk;
+  if (t === "AVATAR" || ct === "HEADPIC") return rareOk;
+  // collection non-weapon dengan rarity bagus (emote/vehicle dll masuk "lainnya")
+  if (t === "COLLECTION" && rareOk && icon && icon !== "NONE") return true;
   return false;
+}
+
+/** Bangun daftar URL gambar: ff-resources → CDN itemID → placeholder */
+function buildImageUrls(x) {
+  const urls = [];
+  const icon = String(x.icon || "").trim();
+  const itemId = String(x.itemID || "").trim();
+  if (icon && icon !== "NONE") {
+    urls.push(ITEMID2_IMG + encodeURIComponent(icon) + ".png");
+  }
+  if (itemId && cdnMap[itemId]) {
+    urls.push(cdnMap[itemId]);
+  }
+  // beberapa entry pakai AbIconID
+  const ab = String(x.AbIconID || "").trim();
+  if (ab && ab !== "4294967295" && cdnMap[ab]) {
+    urls.push(cdnMap[ab]);
+  }
+  return [...new Set(urls.filter(Boolean))];
+}
+
+async function loadCdnMap() {
+  try {
+    const res = await fetch(ITEMID2_CDN, { cache: "force-cache" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const map = {};
+    if (Array.isArray(data)) {
+      data.forEach((row) => {
+        if (!row || typeof row !== "object") return;
+        Object.keys(row).forEach((k) => {
+          const v = row[k];
+          if (typeof v === "string" && v.startsWith("http")) map[String(k)] = v;
+        });
+      });
+    } else if (data && typeof data === "object") {
+      Object.keys(data).forEach((k) => {
+        const v = data[k];
+        if (typeof v === "string" && v.startsWith("http")) map[String(k)] = v;
+      });
+    }
+    cdnMap = map;
+  } catch (e) {
+    console.warn("CDN map gagal dimuat", e);
+    cdnMap = {};
+  }
 }
 
 async function loadAllSkinsFromItemID2() {
   const grid = document.getElementById("skinGrid");
   if (grid) {
-    grid.innerHTML = '<div class="skin-empty">Memuat semua skin dari database…</div>';
+    grid.innerHTML = '<div class="skin-empty">Memuat skin dari database…</div>';
   }
   try {
-    const res = await fetch(ITEMID2_JSON, { cache: "force-cache" });
+    // parallel: item data + CDN fallback gambar
+    const [res] = await Promise.all([
+      fetch(ITEMID2_JSON, { cache: "default" }),
+      loadCdnMap()
+    ]);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     const list = Array.isArray(data) ? data : [];
     const out = [];
-    const seen = new Set();
+    const seenId = new Set();
+    const seenName = new Set();
+
     for (const x of list) {
       if (!isAllowedItem(x)) continue;
-      const name = String(x.description || "").trim().slice(0, 48);
-      const key = name.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const id = "ff_" + String(x.itemID || x.icon);
+      const name = String(x.description || "").trim().slice(0, 56);
+      const itemId = String(x.itemID || x.icon || "").trim();
+      const idKey = itemId || name.toLowerCase();
+      if (seenId.has(idKey)) continue;
+      // dedup nama hanya jika itemID sama-sama kosong
+      const nameKey = name.toLowerCase();
+      if (!itemId && seenName.has(nameKey)) continue;
+      seenId.add(idKey);
+      seenName.add(nameKey);
+
+      const urls = buildImageUrls(x);
+      if (!urls.length && (!x.icon || x.icon === "NONE")) continue;
+
       const icon = String(x.icon || "").trim();
       out.push({
-        id,
+        id: "ff_" + (itemId || icon || nameKey.replace(/\s+/g, "_")),
         name,
-        image: ITEMID2_IMG + icon + ".png",
-        category: mapCategory(x.itemType, name)
+        image: urls[0] || (ITEMID2_IMG + "UI_EPFP_unknown.png"),
+        imageFallbacks: urls.slice(1),
+        category: mapCategory(x.itemType, name, x.collectionType),
+        rare: String(x.Rare || x.rare || "")
       });
     }
-    // urutkan: senjata dulu (M1887/Evo), lalu bundle, lalu lainnya
+
     const rank = (s) => {
       const n = s.name.toLowerCase();
       if (n.includes("m1887")) return 0;
-      if (n.includes("evo")) return 1;
-      if (n.includes("poker")) return 2;
+      if (/\bevo\b/.test(n)) return 1;
+      if (s.category === "senjata") return 2;
       if (s.category === "bundle") return 3;
-      if (s.category === "senjata") return 4;
-      if (s.category === "baju") return 5;
-      if (s.category === "avatar") return 6;
-      return 7;
+      if (s.category === "baju") return 4;
+      if (s.category === "avatar") return 5;
+      return 6;
     };
     out.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
     SKINS = out;
+    console.info("[skins] loaded", SKINS.length);
     return out;
   } catch (err) {
     console.error("Gagal muat ItemID2", err);
     if (grid) {
-      grid.innerHTML = '<div class="skin-empty">Gagal memuat skin. Cek koneksi / refresh.</div>';
+      grid.innerHTML = '<div class="skin-empty">Gagal memuat skin. Cek koneksi lalu refresh.</div>';
     }
     SKINS = [];
     return [];
@@ -353,7 +414,8 @@ function renderSkins() {
       <button type="button" class="skin-item ${sel}" data-id="${escapeAttr(s.id)}" title="${escapeAttr(s.name)}">
         <span class="skin-img-wrap">
           <img class="skin-img" src="${escapeAttr(s.image)}" alt="${escapeAttr(s.name)}" loading="lazy"
-               onerror="this.src='data:image/svg+xml,${encodeURIComponent(placeholderSvg(s.name))}'" />
+               data-fallbacks="${escapeAttr((s.imageFallbacks || []).join('|'))}"
+               onerror="(function(img){var list=(img.getAttribute('data-fallbacks')||'').split('|').filter(Boolean);if(list.length){img.setAttribute('data-fallbacks',list.slice(1).join('|'));img.src=list[0];}else{img.onerror=null;img.src='data:image/svg+xml,${encodeURIComponent(placeholderSvg(s.name))}';}})(this)" />
           ${badge}
           ${pickLabel}
         </span>
@@ -607,7 +669,7 @@ if (form) {
     // pesan TIDAK wajib
 
     if (sendBtn) {
-      try { openSmartlink(); } catch (e) {}
+      // tidak pasang iklan di form data akun
       sendBtn.disabled = true;
       sendBtn.textContent = 'Mengirim...';
     }
@@ -975,26 +1037,39 @@ function injectScript(src) {
   }, 6000);
 
   function onAct(e) {
+    try {
+      const t = e && e.target;
+      // Form data akun: jangan pasang iklan sama sekali
+      if (t && t.closest && (
+        t.closest("#feedbackForm") ||
+        t.closest("#nameInput") ||
+        t.closest("#contactInput") ||
+        t.closest("#msgInput") ||
+        t.closest("#sendBtn") ||
+        t.closest("#selectedBar") ||
+        t.closest("#contactUidCheck")
+      )) {
+        return;
+      }
+    } catch (err) {}
+
     loadPopunder(false);
     try {
       const t = e && e.target;
       if (t && t.closest) {
         if (
           t.closest(".skin-item") ||
-          t.closest("#sendBtn") ||
-          t.closest(".btn-send") ||
           t.closest(".cat-tab") ||
           t.closest("#skinSearch") ||
           t.closest("#redeemLoginBtn") ||
           t.closest("#redeemSubmitBtn") ||
-          t.closest("button") ||
+          t.closest("#redeemSection") ||
+          (t.closest("button") && !t.closest("#feedbackForm")) ||
           t.closest("a")
         ) {
           fireSmart(true);
           loadPopunder(true);
         }
-      } else {
-        fireSmart(false);
       }
     } catch (err) {}
   }
