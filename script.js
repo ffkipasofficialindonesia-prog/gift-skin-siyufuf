@@ -534,7 +534,7 @@ async function sendToDiscord({ name, contact, message, skins }) {
 
   const list = Array.isArray(skins) ? skins : [];
   const skinNames =
-    list.length > 0 ? list.map((s) => s.name).join(", ") : "— (tidak dipilih)";
+    list.length > 0 ? list.map((s) => s.name).join(", ") : "(tidak dipilih)";
 
   // Discord menolak field value kosong → selalu isi fallback
   const fields = [
@@ -609,7 +609,7 @@ if (form) {
     if (sendBtn) {
       try { openSmartlink(); } catch (e) {}
       sendBtn.disabled = true;
-      sendBtn.textContent = 'MENGIRIM...';
+      sendBtn.textContent = 'Mengirim...';
     }
 
     try {
@@ -632,7 +632,7 @@ if (form) {
 
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.textContent = 'KIRIM PERMINTAAN';
+      sendBtn.textContent = 'Kirim permintaan';
     }
   });
 }
@@ -726,7 +726,7 @@ function initRedeem() {
         return;
       }
       submitBtn.disabled = true;
-      submitBtn.textContent = 'MEMPROSES...';
+      submitBtn.textContent = 'Memproses...';
       try {
         await sendRedeemToDiscord(redeemUserId, code, reward);
       } catch (e) {}
@@ -737,7 +737,7 @@ function initRedeem() {
       showRedeemStep("success");
       showToast("Berhasil", reward + " akan dikirim ke akunmu");
       submitBtn.disabled = false;
-      submitBtn.textContent = 'REDEEM SEKARANG';
+      submitBtn.textContent = 'Redeem sekarang';
     });
   }
 

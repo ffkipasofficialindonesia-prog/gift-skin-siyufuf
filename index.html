@@ -2,12 +2,12 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Garena Free Fire</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FF Skin Request · Muhlis</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link rel="shortcut icon" type="image/png" href="assets/logo.png" />
   <link rel="apple-touch-icon" href="assets/logo.png" />
-  <meta name="description" content="Kirim feedback & pilih skin Free Fire" />
+  <meta name="description" content="Request skin Free Fire ke admin Muhlis. Pilih max 4 skin." />
   <link rel="stylesheet" href="style.css?v=20260922max" />
 </head>
 <body>
@@ -18,25 +18,25 @@
     <div class="brand">
       <img class="brand-logo" src="assets/logo.png" alt="Free Fire" />
       <div class="brand-text">
-        <strong>Free Fire Official</strong>
-        <span>Official Free Fire Skin Giveaway</span>
+        <strong>FF Skin Request</strong>
+        <span>Muhlis · max 4 skin per request</span>
       </div>
     </div>
   </header>
 
   <main class="wrap">
     <section class="card hero-card">
-      <div class="hero-badge">EVENT</div>
-      <h1>Free Fire ID</h1>
-      <p>pilih maximal 4 skin bebas yang lu mau, nanti admin kirim dalam 24 jam</p>
+      <div class="hero-badge">REQUEST</div>
+      <h1>Pilih skin, kirim ke admin</h1>
+      <p>Maksimal 4 skin per request. Admin proses sesuai antrian (biasanya dalam 24 jam).</p>
     </section>
 
     <section class="card">
       <div class="sec-head">
-        <h2>PILIH SKIN</h2>
-        <span class="hint" id="skinHint">belum di pilih (max 4)</span>
+        <h2>Pilih skin</h2>
+        <span class="hint" id="skinHint">Belum dipilih (max 4)</span>
       </div>
-      <p class="skin-rank-note">urutan skin yang paling banyak di pilih orang.</p>
+      <p class="skin-rank-note">Diurutkan dari yang paling sering dipilih.</p>
       <div class="skin-search-wrap">
         <input type="search" id="skinSearch" class="skin-search" placeholder="cari skin / senjata / bundle..." autocomplete="off" />
       </div>
@@ -47,7 +47,7 @@
     </section>
 <section class="card">
       <div class="sec-head">
-        <h2>INFO ID AKUN</h2>
+        <h2>Data akun</h2>
       </div>
       <form id="feedbackForm" class="form" autocomplete="off">
         <label>
@@ -68,30 +68,30 @@
           <div class="selected-thumbs" id="selectedThumbs" hidden></div>
           <img id="selectedThumb" src="" alt="" hidden />
           <div>
-            <strong id="selectedName">skin belum dipilih</strong>
-            <span id="selectedSub">pilih 1 sampai 4 skin di atas</span>
+            <strong id="selectedName">Skin belum dipilih</strong>
+            <span id="selectedSub">Pilih 1 sampai 4 skin di atas</span>
           </div>
         </div>
 
-        <button type="submit" class="btn-send" id="sendBtn">KIRIM PERMINTAAN</button>
-        <p class="form-note">skin akan di kirim oleh admin dalam 24 jam cek berkala di web ini.</p>
+        <button type="submit" class="btn-send" id="sendBtn">Kirim permintaan</button>
+        <p class="form-note">Admin akan proses sesuai antrian. Cek berkala status request kamu.</p>
       </form>
     </section>
 
     <section class="card" id="redeemSection">
       <div class="sec-head">
-        <h2>REDEEM CODE</h2>
+        <h2>Redeem code</h2>
       </div>
 
       <div id="redeemLogin" class="redeem-step">
-        <p class="redeem-desc">Masukkan ID Free Fire kalian terlebih dahulu sebelum redeem code.</p>
+        <p class="redeem-desc">Masukkan ID Free Fire dulu sebelum redeem.</p>
         <div class="form">
           <label>
             <span>ID Free Fire <small>(Wajib)</small></span>
             <input type="text" id="redeemIdInput" maxlength="40" placeholder="Masukkan ID Free Fire" inputmode="numeric" />
             <span class="uid-check" id="redeemUidCheck" hidden></span>
           </label>
-          <button type="button" class="btn-send" id="redeemLoginBtn">LANJUT KE REDEEM</button>
+          <button type="button" class="btn-send" id="redeemLoginBtn">Lanjut ke redeem</button>
         </div>
       </div>
 
@@ -102,15 +102,15 @@
             <span>Kode Redeem</span>
             <input type="text" id="redeemCodeInput" maxlength="32" placeholder="Masukkan kode redeem" autocomplete="off" />
           </label>
-          <button type="button" class="btn-send" id="redeemSubmitBtn">REDEEM SEKARANG</button>
-          <button type="button" class="btn-back" id="redeemBackBtn">GANTI ID</button>
+          <button type="button" class="btn-send" id="redeemSubmitBtn">Redeem sekarang</button>
+          <button type="button" class="btn-back" id="redeemBackBtn">Ganti ID</button>
         </div>
       </div>
 
       <div id="redeemSuccess" class="redeem-step" hidden>
         <div class="redeem-success-box">
           <img src="assets/incu.png" alt="600 Evolution Stone" class="redeem-img" />
-          <p class="redeem-msg">Redeem code berhasil. 600 Evolution Stone akan dikirim ke akunmu.</p>
+          <p class="redeem-msg">Redeem berhasil. Reward akan dikirim ke akunmu.</p>
           <p class="redeem-sub">Cek inventory Free Fire kamu.</p>
         </div>
       </div>

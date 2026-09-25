@@ -127,19 +127,19 @@ body {
 }
 .hero-badge {
   display: inline-block;
-  padding: 3px 12px; margin-bottom: 10px;
-  font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
-  color: #1a0a00;
-  background: linear-gradient(90deg, #ffc107, #ff6a00);
-  border-radius: 999px;
+  padding: 4px 10px; margin-bottom: 10px;
+  font-size: 10px; font-weight: 800; letter-spacing: 1px;
+  color: var(--gold);
+  background: rgba(255, 110, 0, 0.15);
+  border: 1px solid rgba(255, 160, 0, 0.35);
+  border-radius: 6px;
 }
 .hero-card h1 {
-  font-size: clamp(22px, 6vw, 32px);
-  font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: clamp(20px, 5.5vw, 28px);
+  font-weight: 800; letter-spacing: 0.5px;
+  text-transform: none;
   margin-bottom: 8px;
-  background: linear-gradient(180deg, #fff 25%, #ffb300 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
 }
 .hero-card p {
   color: var(--muted); font-size: 13px;
@@ -187,13 +187,17 @@ body {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 7px 11px;
   border: 1px solid rgba(255, 120, 0, 0.18);
-  border-radius: 999px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.35);
   color: #b8a890;
   font-size: 11px; font-weight: 700;
-  letter-spacing: 0.4px; text-transform: uppercase;
+  letter-spacing: 0.3px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cat-tab:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 .cat-tab small {
   font-size: 9px; opacity: 0.75;
@@ -294,9 +298,9 @@ body {
 .skin-item .skin-order {
   position: absolute; top: 4px; right: 4px; z-index: 2;
   min-width: 18px; height: 18px; padding: 0 4px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ffc107, #ff6a00);
-  color: #1a0a00;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
   font-size: 10px; font-weight: 800; line-height: 18px; text-align: center;
   pointer-events: none;
 }
@@ -376,22 +380,23 @@ body {
   padding: 11px 16px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ffc107 0%, #ff8a00 40%, #ff5500 100%);
-  color: #1a0a00;
+  background: var(--accent);
+  color: #fff;
   font-size: 13px; font-weight: 800;
-  letter-spacing: 0.8px; text-transform: uppercase;
+  letter-spacing: 0.4px;
   cursor: pointer;
-  box-shadow:
-    0 4px 16px rgba(255, 100, 0, 0.4),
-    inset 0 1px 0 rgba(255, 230, 150, 0.45);
-  transition: filter 0.15s, transform 0.15s;
+  transition: background 0.15s;
 }
 .btn-send:hover {
-  filter: brightness(1.06);
+  background: #e85f00;
 }
-.btn-send:active { transform: scale(0.98); }
+.btn-send:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.btn-send:active { background: #d45500; }
 .btn-send:disabled {
-  opacity: 0.55; cursor: not-allowed; filter: none;
+  opacity: 0.55; cursor: not-allowed;
 }
 
 .btn-back {
@@ -424,7 +429,6 @@ body {
 .redeem-img {
   width: 100px; height: 100px; object-fit: contain;
   margin: 0 auto 12px; display: block;
-  filter: drop-shadow(0 6px 16px rgba(255, 160, 0, 0.35));
 }
 .redeem-msg {
   font-size: 14px; font-weight: 700; color: var(--gold);
@@ -566,5 +570,53 @@ body {
   .hint {
     font-size: 10px;
     padding: 2px 7px;
+  }
+}
+
+
+/* ===== Responsive all devices ===== */
+@supports (padding: max(0px)) {
+  .top { padding-top: max(14px, env(safe-area-inset-top)); }
+  .wrap { padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+  .toast { bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+
+@media (min-width: 900px) {
+  .skin-grid { grid-template-columns: repeat(6, 1fr); }
+  .skin-scroll { max-height: min(60vh, 560px); }
+}
+
+@media (max-width: 480px) {
+  .top { padding: 10px 10px 4px; }
+  .wrap { padding: 6px 10px 32px; gap: 10px; }
+  .card { padding: 14px 12px; }
+  .hero-card { padding: 18px 12px 16px; }
+  .skin-scroll { max-height: min(48vh, 400px); padding: 6px; }
+  .skin-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .skin-item .skin-name { font-size: 9px; padding: 5px 3px 6px; }
+  .category-tabs { gap: 5px; }
+  .btn-send, .btn-back { min-height: 44px; }
+  .form input[type="text"],
+  .form textarea,
+  .skin-search { font-size: 16px; } /* prevent iOS zoom */
+}
+
+@media (max-width: 360px) {
+  .skin-grid { grid-template-columns: repeat(2, 1fr); }
+  .brand-logo { width: 40px; height: 40px; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .skin-scroll { max-height: 38vh; }
+  .hero-card { padding: 12px; }
+  .hero-card h1 { font-size: 18px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .cat-tab, .skin-item, .btn-send, .btn-back {
+    min-height: 40px;
+  }
+  .skin-item:hover {
+    box-shadow: none;
   }
 }
